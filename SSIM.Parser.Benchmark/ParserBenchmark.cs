@@ -8,7 +8,7 @@ namespace SSIM.Parser.Benchmark;
 //[SimpleJob(RuntimeMoniker.Net90)]
 public class ParserBenchmark
 {
-    private readonly string _filePath = "g_sample.ssim";
+    private readonly string _filePath = "sample.ssim";
   
     [Benchmark]
     public void ParseSchedule()
