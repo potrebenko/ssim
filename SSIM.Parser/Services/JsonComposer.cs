@@ -79,16 +79,36 @@ public class JsonComposer : IDataComposer
 
         _buffer[_position] = Quote;
         _position++;
-        Buffer.BlockCopy(fieldName, 0, _buffer, _position, fieldName.Length);
-        _position += fieldName.Length;
+        if (fieldName.Length > 8)
+        {
+            Buffer.BlockCopy(fieldName, 0, _buffer, _position, fieldName.Length);
+            _position += fieldName.Length;
+        }
+        else
+        {
+            for (int i = 0; i < fieldName.Length; i++)
+            {
+                _buffer[_position++] = fieldName[i];
+            }    
+        }
         _buffer[_position] = Quote;
         _position++;
         _buffer[_position] = Colon;
         _position++;
         _buffer[_position] = Quote;
         _position++;
-        Buffer.BlockCopy(fieldValue, 0, _buffer, _position, fieldValue.Length);
-        _position += fieldValue.Length;
+        if (fieldValue.Length > 8)
+        {
+            Buffer.BlockCopy(fieldValue, 0, _buffer, _position, fieldValue.Length);
+            _position += fieldValue.Length;   
+        }
+        else
+        {
+            for (int i = 0; i < fieldValue.Length; i++)
+            {
+                _buffer[_position++] = fieldValue[i];
+            }    
+        }
         _buffer[_position] = Quote;
         _position++;
 
@@ -106,17 +126,37 @@ public class JsonComposer : IDataComposer
 
         _buffer[_position] = Quote;
         _position++;
-        Buffer.BlockCopy(fieldName, 0, _buffer, _position, fieldName.Length);
-        _position += fieldName.Length;
+        if(fieldName.Length > 8)
+        {
+            Buffer.BlockCopy(fieldName, 0, _buffer, _position, fieldName.Length);
+            _position += fieldName.Length;
+        }
+        else
+        {
+            for (int i = 0; i < fieldName.Length; i++)
+            {
+                _buffer[_position++] = fieldName[i];
+            }
+        }
         _buffer[_position] = Quote;
         _position++;
         _buffer[_position] = Colon;
         _position++;
         _buffer[_position] = Quote;
         _position++;
-        Buffer.BlockCopy(record, offset, _buffer, _position, valueLength);
-        _position += valueLength;
-
+        if (valueLength > 8)
+        {
+            Buffer.BlockCopy(record, offset, _buffer, _position, valueLength);
+            _position += valueLength;
+        }
+        else
+        {
+            for (int i = 0; i < valueLength; i++)
+            {
+                _buffer[_position++] = record[offset + i];
+            }    
+        }
+        
         _buffer[_position] = Quote;
         _position++;
 

@@ -5,7 +5,7 @@ namespace SSIM.Parser.Benchmark;
 
 [MemoryDiagnoser]
 [SimpleJob(RuntimeMoniker.Net80)]
-//[SimpleJob(RuntimeMoniker.Net90)]
+[SimpleJob(RuntimeMoniker.Net90)]
 public class ParserBenchmark
 {
     private readonly string _filePath = "sample.ssim";
