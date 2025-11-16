@@ -7,27 +7,32 @@ class Program
 {
     static void Main(string[] args)
     {
-        var readBufferSize = new Option<int>(
-            ["-r", "--read-buffer-size"],
-            getDefaultValue: () => 20_100,
-            description: "The buffer size for the file reader.");
-        var writeBufferSize = new Option<int>(
-            ["-w", "--write-buffer-size"],
-            getDefaultValue: () => 16_384,
-            description: "The buffer size for the file writer.");
-        var jsonBufferSize = new Option<int>(
-            ["-j", "--json-buffer-size"],
-            getDefaultValue: () => 16_384,
-            description: "The buffer size for the json composer.");
-        var pathToFile = new Option<string>(
-            ["-i", "--input-path"],
-            getDefaultValue: () => "sample.ssim",
-            description: "The path to the SSIM file.");
-        var pathToOutput = new Option<string>(
-            ["-o", "--output-path"],
-            getDefaultValue: () => "SSIM_output.json",
-            description: "The path to the output file.");
-        
+        Option<int> readBufferSize = new("--read-buffer-size", "-r")
+        {
+            DefaultValueFactory = x => 20_100,
+            Description = "The buffer size for the file reader."
+        };
+        Option<int> writeBufferSize = new("--write-buffer-size", "-w")
+        {
+            DefaultValueFactory = x => 16_384,
+            Description = "The buffer size for the file writer."
+        };
+        Option<int> jsonBufferSize = new("--json-buffer-size", "-j")
+        {
+            DefaultValueFactory = x => 16_384,
+            Description = "The buffer size for the json composer."
+        };
+        Option<string> pathToFile = new("--input-path", "-i")
+        {
+            DefaultValueFactory = x => "sample.ssim",
+            Description = "The path to the SSIM file."
+        };
+        Option<string> pathToOutput = new("--output-path", "-o")
+        {
+            DefaultValueFactory = x => "SSIM_output.json",
+            Description = "The path to the output file."
+        };
+
         var rootCommand = new RootCommand
         {
             readBufferSize,
@@ -36,17 +41,26 @@ class Program
             pathToFile,
             pathToOutput
         };
-        
-        var configurationBinder = new ConfigurationBinder(
-            readBufferSize, writeBufferSize, jsonBufferSize, pathToFile, pathToOutput);
 
-        rootCommand.SetHandler(RunParser, configurationBinder);
-            
-        rootCommand.Invoke(args);
+        var configurationBinder = new ConfigurationBinder(
+            readBufferSize,
+            writeBufferSize,
+            jsonBufferSize,
+            pathToFile,
+            pathToOutput);
+
+        rootCommand.SetAction(parseResult =>
+        {
+            var configuration = configurationBinder.GetBoundValue(parseResult);
+            RunParser(configuration);
+        });
+
+        var parseResult = rootCommand.Parse(args);
+        parseResult.Invoke();
     }
 
     private static void RunParser(Configuration configuration)
-     { 
+    {
         var startTime = Stopwatch.GetTimestamp();
         var reader = new SSIMFileReader(configuration.FilePath, configuration.FileReaderBufferSize);
         var composer = new JsonComposer(configuration.JsonComposerBufferSize);
@@ -54,7 +68,7 @@ class Program
         var parser = new SSIMParser(reader, writer, composer);
         var records = parser.Parse();
         var endTime = Stopwatch.GetTimestamp();
-        
+
         Console.WriteLine($"Parsed {records} records.");
         Console.WriteLine($"Elapsed time: {TimeSpan.FromTicks(endTime - startTime)}");
     }

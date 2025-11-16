@@ -6,27 +6,40 @@ class Program
 {
     static void Main(string[] args)
     {
-        var recordsOption = new Option<int>(
-            aliases: ["-r", "--records"],
-            getDefaultValue: () => 100,
-            description: "The number of records to generate.");
-        var outputOption = new Option<string>(
-            aliases: ["-o", "--output"],
-            getDefaultValue: () => "sample.ssim",
-            description: "The path to the output file.");
-
-        var rootCommand = new RootCommand();
-        rootCommand.AddOption(recordsOption);
-        rootCommand.AddOption(outputOption);
-        
-        rootCommand.SetHandler((recordsToGenerate, outputPath) =>
+        Option<int> recordsOption = new("--records", "-r")
         {
-            var recordGenerator = new SSIMRecordGenerator();
-            using var writer = new FileRecordWriter(outputPath);
-            var generator = new SSIMGenerator(recordsToGenerate, recordGenerator, writer);
-            generator.Generate();
-            Console.WriteLine($"Generated {recordsToGenerate} records to {outputPath}");
-        }, recordsOption, outputOption);
-        rootCommand.Invoke(args);
+            DefaultValueFactory = x => 100,
+            Description = "The number of records to generate."
+        };
+        Option<string> outputOption = new("--output", "-o")
+        {
+            DefaultValueFactory = x => "sample.ssim",
+            Description = "The path to the output file."
+        };
+
+        var rootCommand = new RootCommand
+        {
+            recordsOption,
+            outputOption
+        };
+
+        rootCommand.SetAction(resultParser =>
+        {
+            var recordsToGenerate = resultParser.GetRequiredValue(recordsOption);
+            var outputPath = resultParser.GetRequiredValue(outputOption);
+            ParseSSIM(recordsToGenerate, outputPath);
+        });
+        
+        var resultParser = rootCommand.Parse(args);
+        resultParser.Invoke();
+    }
+
+    private static void ParseSSIM(int recordsToGenerate, string outputPath)
+    {
+        var recordGenerator = new SSIMRecordGenerator();
+        using var writer = new FileRecordWriter(outputPath);
+        var generator = new SSIMGenerator(recordsToGenerate, recordGenerator, writer);
+        generator.Generate();
+        Console.WriteLine($"Generated {recordsToGenerate} records to {outputPath}");
     }
 }

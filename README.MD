@@ -59,6 +59,8 @@ To measure the performance you have two ways:
 
 ### Test results
 
+#### .NET 8 macOS Sequoia 15.1
+
 ```
 1 000 000 records with BenchmarksDotNet
 
@@ -76,12 +78,47 @@ Job=.NET 8.0  Runtime=.NET 8.0
 ```
 
 ```
-1 000 000 records. Cold start
+1 000 000 records. Cold start .NET 8
 
 > ./SSIMParser -i sample.ssim -o SSIM_output.json
 
 Parsed 999999 records
 Elapsed time: 00:02:14.9240791
+
+192 MB sample.ssim
+1.3 GB SSIM_output.json
+```
+
+#### .NET 10 macOS Tahoe 26.1 (has some performance improvements)
+
+```
+1 000 000 records with BenchmarksDotNet
+
+// * Summary *
+
+BenchmarkDotNet v0.15.6, macOS 26.1 (25B78) [Darwin 25.1.0]
+Apple M1 Max, 1 CPU, 10 logical and 10 physical cores
+.NET SDK 10.0.100
+  [Host]    : .NET 10.0.0 (10.0.0, 10.0.25.52411), Arm64 RyuJIT armv8.0-a
+  .NET 10.0 : .NET 10.0.0 (10.0.0, 10.0.25.52411), Arm64 RyuJIT armv8.0-a
+  .NET 8.0  : .NET 8.0.22 (8.0.22, 8.0.2225.52707), Arm64 RyuJIT armv8.0-a
+  .NET 9.0  : .NET 9.0.11 (9.0.11, 9.0.1125.51716), Arm64 RyuJIT armv8.0-a
+
+
+| Method        | Job       | Runtime   | Mean     | Error    | StdDev   | Allocated |
+|-------------- |---------- |---------- |---------:|---------:|---------:|----------:|
+| ParseSchedule | .NET 10.0 | .NET 10.0 | 814.7 ms | 16.11 ms | 19.79 ms |  74.79 KB |
+| ParseSchedule | .NET 8.0  | .NET 8.0  | 822.4 ms | 12.20 ms | 11.42 ms |  74.73 KB |
+| ParseSchedule | .NET 9.0  | .NET 9.0  | 810.5 ms | 11.74 ms | 10.98 ms |  74.74 KB |
+```
+
+```
+1 000 000 records. Cold start .NET 10
+
+> ./SSIMParser -i sample.ssim -o SSIM_output.json
+
+Parsed 999999 records.
+Elapsed time: 00:01:39.8150125
 
 192 MB sample.ssim
 1.3 GB SSIM_output.json

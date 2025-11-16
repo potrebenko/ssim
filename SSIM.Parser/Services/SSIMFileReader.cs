@@ -8,6 +8,11 @@ public class SSIMFileReader : ISSIMReader
 
     public SSIMFileReader(string path, int fileReaderBufferSize)
     {
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException($"File not found {path}");
+        }
+        
         _reader = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None, fileReaderBufferSize, 
             FileOptions.SequentialScan);
         
