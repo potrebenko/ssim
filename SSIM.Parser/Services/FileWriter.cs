@@ -13,14 +13,14 @@ public class FileWriter : IFileWriter
             FileOptions.SequentialScan);
     }
 
-    private void OnFlush(object sender, (byte[] buffer, int position) e)
+    private void OnFlush(byte[] buffer, int position)
     {
-        WriteBytes(e);
+        WriteBytes(buffer, position);
     }
 
-    private void WriteBytes((byte[] buffer, int position) e)
+    private void WriteBytes(byte[] buffer, int position)
     {
-        _streamWriter.Write(e.buffer, 0, e.position);
+        _streamWriter.Write(buffer, 0, position);
     }
 
     public void Dispose()

@@ -10,33 +10,34 @@ public static class HeaderRecord
     /// <summary>
     /// The type of records in the computerized schedules formats for Chapter 7
     /// </summary>
-    public static byte[] RecordType = "RecordType".ToBytes();
+    public static ReadOnlySpan<byte> RecordType => "RecordType"u8;
     
     /// <summary>
     /// The application of the data set in plain language
     /// </summary>
-    public static byte[] TitleOfContents = "TitleOfContents".ToBytes();
-    public static byte[] Spare = "Spare".ToBytes();
+    public static ReadOnlySpan<byte> TitleOfContents => "TitleOfContents"u8;
+    public static ReadOnlySpan<byte> Spare => "Spare"u8;
     
     /// <summary>
     /// The number of Seasons that have been included in the data set
     /// </summary>
-    public static byte[] NumberOfSeasons = "NumberOfSeasons".ToBytes();
-    public static byte[] Spare2 = "Spare2".ToBytes();
+    public static ReadOnlySpan<byte> NumberOfSeasons => "NumberOfSeasons"u8;
+    public static ReadOnlySpan<byte> Spare2 => "Spare2"u8;
     
     /// <summary>
     /// Indication of the position of the physical data set within the logical data set in which it occurs 
     /// </summary>
-    public static byte[] DataSetSerialNumber = "DataSetSerialNumber".ToBytes();
+    public static ReadOnlySpan<byte> DataSetSerialNumber => "DataSetSerialNumber"u8;
     
     /// <summary>
     /// The number of the record in computerized schedule formats
     /// </summary>
-    public static byte[] RecordSerialNumber = "RecordSerialNumber".ToBytes();
+    public static ReadOnlySpan<byte> RecordSerialNumber => "RecordSerialNumber"u8;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ParseHeaderRecord(this byte[] record, IDataComposer composer)
     {
+        composer.CheckBuffer(153);
         composer.AppendOpenCurlyBrace();
 
         composer.AppendField(RecordType, ConstantValues.RecordType1);

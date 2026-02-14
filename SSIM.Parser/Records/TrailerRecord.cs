@@ -7,41 +7,42 @@ public static class TrailerRecord
     /// <summary>
     /// The type of records in the computerized schedules formats for Chapter 7
     /// </summary>
-    public static byte[] RecordType = "RecordType".ToBytes();
-    public static byte[] Spare = "Spare".ToBytes();
+    public static ReadOnlySpan<byte> RecordType => "RecordType"u8;
+    public static ReadOnlySpan<byte> Spare => "Spare"u8;
     
     /// <summary>
     /// The 2-character code assigned to a carrier by IATA and published in the IATA Airline Coding
     /// Directory or the 3-alphabetic codes assigned to a carrier by ICAO
     /// </summary>
-    public static byte[] AirlineDesignator = "AirlineDesignator".ToBytes();
+    public static ReadOnlySpan<byte> AirlineDesignator => "AirlineDesignator"u8;
     
     /// <summary>
     /// The Release (Sell) Date is intended to show the first date when a specified schedule can be
     /// opened for sale
     /// </summary>
-    public static byte[] ReleaseSellDate = "ReleaseSellDate".ToBytes();
-    public static byte[] Spare2 = "Spare2".ToBytes();
+    public static ReadOnlySpan<byte> ReleaseSellDate => "ReleaseSellDate"u8;
+    public static ReadOnlySpan<byte> Spare2 => "Spare2"u8;
     
     /// <summary>
     /// A check number to ensure that data set records are processed in the correct sequence
     /// </summary>
-    public static byte[] SerialNumberCheckReference = "SerialNumberCheckReference".ToBytes();
+    public static ReadOnlySpan<byte> SerialNumberCheckReference => "SerialNumberCheckReference"u8;
     
     /// <summary>
     /// Indication that this is either the last message/data set in a data transfer or that further
     /// are to be expected
     /// </summary>
-    public static byte[] ContinuationEndCode = "ContinuationEndCode".ToBytes();
+    public static ReadOnlySpan<byte> ContinuationEndCode => "ContinuationEndCode"u8;
     
     /// <summary>
     /// The number of the record in computerized schedule formats
     /// </summary>
-    public static byte[] RecordSerialNumber = "RecordSerialNumber".ToBytes();
+    public static ReadOnlySpan<byte> RecordSerialNumber => "RecordSerialNumber"u8;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ParseTrailerRecord(this byte[] record, int offset, IDataComposer composer)
     {
+        composer.CheckBuffer(167);
         composer.AppendComma();
         composer.AppendOpenCurlyBrace();
 

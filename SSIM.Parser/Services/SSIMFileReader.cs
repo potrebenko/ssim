@@ -25,10 +25,10 @@ public class SSIMFileReader : ISSIMReader
 
     public byte[][] ReadHeaders()
     {
-        _reader.Read(_headBufferSegments[0], 0, Constants.RecordLength);
+        _reader.ReadExactly(_headBufferSegments[0], 0, Constants.RecordLength);
 
         _reader.Seek(1005, SeekOrigin.Begin);
-        _reader.Read(_headBufferSegments[1], 0, Constants.RecordLength);
+        _reader.ReadExactly(_headBufferSegments[1], 0, Constants.RecordLength);
 
         _reader.Position = 2010;
         return _headBufferSegments;

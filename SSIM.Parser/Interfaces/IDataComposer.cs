@@ -2,17 +2,19 @@ namespace SSIM.Parser;
 
 public interface IDataComposer
 {
-    event EventHandler<(byte[] buffer, int position)> OnFlush;
+    event Action<byte[], int> OnFlush;
     void AppendCloseBracket();
     void AppendOpenBracket();
     void AppendComma();
     void AppendCloseCurlyBrace();
     void AppendOpenCurlyBrace();
-    void AppendField(byte[] fieldName, byte[] record, int offset, int valueLength, bool setComma = true);
-    void AppendField(byte[] fieldName, byte[] fieldValue, bool setComma = true);
+    void AppendField(ReadOnlySpan<byte> fieldName, byte[] record, int offset, int valueLength, bool setComma = true);
+    void AppendField(ReadOnlySpan<byte> fieldName, ReadOnlySpan<byte> record, bool setComma = true);
     void Flush();
-    void AppendFieldRightJustified(byte[] fieldName, byte[] record, int offset, int valueLength,
+    void AppendFieldRightJustified(ReadOnlySpan<byte> fieldName, byte[] record, int offset, int valueLength,
         bool setComma = true);
-    void AppendFieldLeftJustified(byte[] fieldName, byte[] record, int offset, int valueLength,
+    void AppendFieldLeftJustified(ReadOnlySpan<byte> fieldName, byte[] record, int offset, int valueLength,
         bool setComma = true);
+
+    void CheckBuffer(int size);
 }

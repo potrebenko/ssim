@@ -38,23 +38,12 @@ public class SSIMParser
             
             while (offset + Constants.RecordLength <= readLength)
             {
-                var type = _buffer[offset];
-                if (type == ConstantValues.RecordType3[0])
+                switch (_buffer[offset])
                 {
-                    _buffer.ParseFlightLegRecord(offset, _composer);
-                    parsedRecords++;
+                    case (byte)'3': _buffer.ParseFlightLegRecord(offset, _composer); break;
+                    case (byte)'4': _buffer.ParseSegmentDataRecord(offset, _composer); break;
+                    case (byte)'5': _buffer.ParseTrailerRecord(offset, _composer); break;
                 }
-                else if (type == ConstantValues.RecordType4[0])
-                {
-                    _buffer.ParseSegmentDataRecord(offset, _composer);
-                    parsedRecords++;
-                }
-                else if (type == ConstantValues.RecordType5[0])
-                {
-                    _buffer.ParseTrailerRecord(offset, _composer);
-                    parsedRecords++;
-                }
-
                 offset += Constants.RecordLength;
             }
         }

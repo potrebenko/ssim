@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace SSIM.Parser;
@@ -8,7 +9,7 @@ namespace SSIM.Parser;
     "CA2018:\'Buffer.BlockCopy\' expects the number of bytes to be copied for the \'count\' argument")]
 public class JsonComposer : IDataComposer
 {
-    public event EventHandler<(byte[] buffer, int position)> OnFlush;
+    public event Action<byte[], int> OnFlush;
 
     private const byte OpenCurlyBrace = (byte)'{';
     private const byte CloseCurlyBrace = (byte)'}';
@@ -35,53 +36,42 @@ public class JsonComposer : IDataComposer
 
     public void AppendOpenBracket()
     {
-        CheckBuffer(1);
-
         _buffer[_position] = OpenBracket;
         _position++;
     }
 
     public void AppendCloseBracket()
     {
-        CheckBuffer(1);
-
         _buffer[_position] = CloseBracket;
         _position++;
     }
 
     public void AppendCloseCurlyBrace()
     {
-        CheckBuffer(1);
-
         _buffer[_position] = CloseCurlyBrace;
         _position++;
     }
 
     public void AppendOpenCurlyBrace()
     {
-        CheckBuffer(1);
-
         _buffer[_position] = OpenCurlyBrace;
         _position++;
     }
 
     public void AppendComma()
     {
-        CheckBuffer(1);
-
         _buffer[_position] = Comma;
         _position++;
     }
 
-    public void AppendField(byte[] fieldName, byte[] fieldValue, bool setComma = true)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AppendField(ReadOnlySpan<byte> fieldName, ReadOnlySpan<byte> record, bool setComma = true)
     {
-        CheckBuffer(fieldName.Length + fieldValue.Length + 6); // 6 -> "":"",
-
         _buffer[_position] = Quote;
         _position++;
         if (fieldName.Length > 8)
         {
-            Buffer.BlockCopy(fieldName, 0, _buffer, _position, fieldName.Length);
+            fieldName.CopyTo(_buffer.AsSpan(_position));
             _position += fieldName.Length;
         }
         else
@@ -97,16 +87,16 @@ public class JsonComposer : IDataComposer
         _position++;
         _buffer[_position] = Quote;
         _position++;
-        if (fieldValue.Length > 8)
+        if (record.Length > 8)
         {
-            Buffer.BlockCopy(fieldValue, 0, _buffer, _position, fieldValue.Length);
-            _position += fieldValue.Length;   
+            record.CopyTo(_buffer.AsSpan(_position));
+            _position += record.Length;   
         }
         else
         {
-            for (int i = 0; i < fieldValue.Length; i++)
+            for (int i = 0; i < record.Length; i++)
             {
-                _buffer[_position++] = fieldValue[i];
+                _buffer[_position++] = record[i];
             }    
         }
         _buffer[_position] = Quote;
@@ -119,16 +109,14 @@ public class JsonComposer : IDataComposer
         }
     }
 
-    public void AppendField(byte[] fieldName, byte[] record, int offset, int valueLength,
-        bool setComma = true)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AppendField(ReadOnlySpan<byte> fieldName, byte[] record, int offset, int valueLength, bool setComma = true)
     {
-        CheckBuffer(fieldName.Length + valueLength + 6); // 6 -> "":"",
-
         _buffer[_position] = Quote;
         _position++;
         if(fieldName.Length > 8)
         {
-            Buffer.BlockCopy(fieldName, 0, _buffer, _position, fieldName.Length);
+            fieldName.CopyTo(_buffer.AsSpan(_position));
             _position += fieldName.Length;
         }
         else
@@ -167,10 +155,9 @@ public class JsonComposer : IDataComposer
         }
     }
 
-    public void AppendFieldRightJustified(byte[] fieldName, byte[] record, int offset, int valueLength,
-        bool setComma = true)
+    public void AppendFieldRightJustified(ReadOnlySpan<byte> fieldName, byte[] record, int offset, int valueLength, bool setComma = true)
     {
-        while (record[offset] == Blank && valueLength > 0)
+        while (valueLength > 0 && offset < record.Length && record[offset] == Blank)
         {
             offset++;
             valueLength--;
@@ -179,10 +166,9 @@ public class JsonComposer : IDataComposer
         AppendField(fieldName, record, offset, valueLength, setComma);
     }
 
-    public void AppendFieldLeftJustified(byte[] fieldName, byte[] record, int offset, int valueLength,
-        bool setComma = true)
+    public void AppendFieldLeftJustified(ReadOnlySpan<byte> fieldName, byte[] record, int offset, int valueLength, bool setComma = true)
     {
-        while (record[offset + valueLength - 1] == Blank && valueLength > 0)
+        while (valueLength > 0 && offset + valueLength <= record.Length && record[offset + valueLength - 1] == Blank)
         {
             valueLength--;
         }
@@ -190,22 +176,22 @@ public class JsonComposer : IDataComposer
         AppendField(fieldName, record, offset, valueLength, setComma);
     }
 
-    public override string ToString()
+    public void CheckBuffer(int size)
     {
-        return Encoding.UTF8.GetString(_buffer, 0, _position);
-    }
-
-    private void CheckBuffer(int length)
-    {
-        if (_position + length >= _bufferSize)
+        if (_position + size >= _bufferSize)
         {
             Flush();
             _position = 0;
         }
     }
 
+    public override string ToString()
+    {
+        return Encoding.UTF8.GetString(_buffer, 0, _position);
+    }
+
     public void Flush()
     {
-        OnFlush?.Invoke(this, (_buffer, _position));
+        OnFlush?.Invoke(_buffer, _position);
     }
 }
