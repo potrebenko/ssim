@@ -4,6 +4,7 @@ using BenchmarkDotNet.Jobs;
 namespace SSIM.Parser.Benchmark;
 
 [MemoryDiagnoser]
+//[ShortRunJob]
 [SimpleJob(RuntimeMoniker.Net80)]
 [SimpleJob(RuntimeMoniker.Net90)]
 [SimpleJob(RuntimeMoniker.Net10_0)]
