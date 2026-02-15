@@ -7,15 +7,16 @@ public class SSIMParser
     private readonly IDataComposer _composer;
     private readonly byte[] _buffer;
     private readonly int _maxBufferLength;
+    private const int BufferSize = 20_100;
     
-    public SSIMParser(ISSIMReader fileReader, IFileWriter fileWriter, IDataComposer composer, int bufferSize = 20_100)
+    public SSIMParser(ISSIMReader fileReader, IFileWriter fileWriter, IDataComposer composer)
     {
         _fileWriter = fileWriter;
         _fileReader = fileReader;
         _composer = composer;
 
-        _buffer = new byte[bufferSize];
-        _maxBufferLength = bufferSize;
+        _buffer = new byte[BufferSize];
+        _maxBufferLength = BufferSize;
     }
 
     public int Parse()

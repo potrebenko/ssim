@@ -351,4 +351,218 @@ public class JsonComposerTests
         var actual = Encoding.ASCII.GetString(jsonComposer.InternalBuffer.ToArray(), 0, expected.Length);
         actual.Should().Be(expected);
     }
+
+    [Fact]
+    public void AppendFieldRightJustified_AllBlanks_ShouldProduceEmptyValue()
+    {
+        // Arrange
+        var jsonComposer = new JsonComposer(1024);
+        byte[] fieldName = "name".ToBytes();
+        byte[] fieldValue = "     ".ToBytes();
+        string expected = "\"name\":\"\",";
+
+        // Act
+        jsonComposer.AppendFieldRightJustified(fieldName, fieldValue, 0, fieldValue.Length);
+
+        // Assert
+        var actual = Encoding.ASCII.GetString(jsonComposer.InternalBuffer.ToArray(), 0, expected.Length);
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void AppendFieldLeftJustified_AllBlanks_ShouldProduceEmptyValue()
+    {
+        // Arrange
+        var jsonComposer = new JsonComposer(1024);
+        byte[] fieldName = "name".ToBytes();
+        byte[] fieldValue = "     ".ToBytes();
+        string expected = "\"name\":\"\",";
+
+        // Act
+        jsonComposer.AppendFieldLeftJustified(fieldName, fieldValue, 0, fieldValue.Length);
+
+        // Assert
+        var actual = Encoding.ASCII.GetString(jsonComposer.InternalBuffer.ToArray(), 0, expected.Length);
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void AppendFieldLeftJustified_SingleTrailingBlank_ShouldTrimIt()
+    {
+        // Arrange
+        var jsonComposer = new JsonComposer(1024);
+        byte[] fieldName = "name".ToBytes();
+        byte[] fieldValue = "XY ".ToBytes();
+        string expected = "\"name\":\"XY\",";
+
+        // Act
+        jsonComposer.AppendFieldLeftJustified(fieldName, fieldValue, 0, fieldValue.Length);
+
+        // Assert
+        var actual = Encoding.ASCII.GetString(jsonComposer.InternalBuffer.ToArray(), 0, expected.Length);
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void AppendFieldRightJustified_WithOffset_ShouldTrimFromOffset()
+    {
+        // Arrange - value within a larger buffer at non-zero offset
+        var jsonComposer = new JsonComposer(1024);
+        byte[] fieldName = "name".ToBytes();
+        byte[] buffer = "XXXXX  ABC".ToBytes();
+        string expected = "\"name\":\"ABC\",";
+
+        // Act
+        jsonComposer.AppendFieldRightJustified(fieldName, buffer, 5, 5);
+
+        // Assert
+        var actual = Encoding.ASCII.GetString(jsonComposer.InternalBuffer.ToArray(), 0, expected.Length);
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void AppendFieldLeftJustified_WithOffset_ShouldTrimFromOffset()
+    {
+        // Arrange
+        var jsonComposer = new JsonComposer(1024);
+        byte[] fieldName = "name".ToBytes();
+        byte[] buffer = "XXXXXABC  ".ToBytes();
+        string expected = "\"name\":\"ABC\",";
+
+        // Act
+        jsonComposer.AppendFieldLeftJustified(fieldName, buffer, 5, 5);
+
+        // Assert
+        var actual = Encoding.ASCII.GetString(jsonComposer.InternalBuffer.ToArray(), 0, expected.Length);
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void Flush_WithNoSubscribers_ShouldNotThrow()
+    {
+        // Arrange
+        var jsonComposer = new JsonComposer(1024);
+        jsonComposer.AppendOpenBracket();
+
+        // Act & Assert
+        var act = () => jsonComposer.Flush();
+        act.Should().NotThrow();
+    }
+
+    [Fact]
+    public void AppendField_WithEmptyFieldName_ShouldAppendEmptyKey()
+    {
+        // Arrange
+        var jsonComposer = new JsonComposer(1024);
+        byte[] fieldName = Array.Empty<byte>();
+        byte[] fieldValue = "val".ToBytes();
+        string expected = "\"\":\"val\",";
+
+        // Act
+        jsonComposer.AppendField(fieldName, fieldValue);
+
+        // Assert
+        var actual = Encoding.ASCII.GetString(jsonComposer.InternalBuffer.ToArray(), 0, expected.Length);
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void AppendField_WithEmptyValue_ShouldAppendEmptyValue()
+    {
+        // Arrange
+        var jsonComposer = new JsonComposer(1024);
+        byte[] fieldName = "name".ToBytes();
+        byte[] fieldValue = Array.Empty<byte>();
+        string expected = "\"name\":\"\",";
+
+        // Act
+        jsonComposer.AppendField(fieldName, fieldValue);
+
+        // Assert
+        var actual = Encoding.ASCII.GetString(jsonComposer.InternalBuffer.ToArray(), 0, expected.Length);
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void AppendField_WithOffset_ZeroLength_ShouldAppendEmptyValue()
+    {
+        // Arrange
+        var jsonComposer = new JsonComposer(1024);
+        byte[] fieldName = "name".ToBytes();
+        byte[] fieldValue = "value".ToBytes();
+        string expected = "\"name\":\"\",";
+
+        // Act
+        jsonComposer.AppendField(fieldName, fieldValue, 0, 0);
+
+        // Assert
+        var actual = Encoding.ASCII.GetString(jsonComposer.InternalBuffer.ToArray(), 0, expected.Length);
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void AppendField_WithExactly8ByteFieldName_ShouldUseLoopPath()
+    {
+        // Arrange - exactly 8 bytes uses the manual loop (not CopyTo)
+        var jsonComposer = new JsonComposer(1024);
+        byte[] fieldName = "12345678".ToBytes();
+        byte[] fieldValue = "v".ToBytes();
+        string expected = "\"12345678\":\"v\",";
+
+        // Act
+        jsonComposer.AppendField(fieldName, fieldValue);
+
+        // Assert
+        var actual = Encoding.ASCII.GetString(jsonComposer.InternalBuffer.ToArray(), 0, expected.Length);
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void AppendField_WithExactly8ByteValue_ShouldUseLoopPath()
+    {
+        // Arrange
+        var jsonComposer = new JsonComposer(1024);
+        byte[] fieldName = "n".ToBytes();
+        byte[] fieldValue = "12345678".ToBytes();
+        string expected = "\"n\":\"12345678\",";
+
+        // Act
+        jsonComposer.AppendField(fieldName, fieldValue);
+
+        // Assert
+        var actual = Encoding.ASCII.GetString(jsonComposer.InternalBuffer.ToArray(), 0, expected.Length);
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void AppendField_With9ByteFieldName_ShouldUseCopyToPath()
+    {
+        // Arrange - 9 bytes triggers CopyTo (> 8)
+        var jsonComposer = new JsonComposer(1024);
+        byte[] fieldName = "123456789".ToBytes();
+        byte[] fieldValue = "v".ToBytes();
+        string expected = "\"123456789\":\"v\",";
+
+        // Act
+        jsonComposer.AppendField(fieldName, fieldValue);
+
+        // Assert
+        var actual = Encoding.ASCII.GetString(jsonComposer.InternalBuffer.ToArray(), 0, expected.Length);
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void CheckBuffer_JustBelowLimit_ShouldNotFlush()
+    {
+        // Arrange
+        bool flushed = false;
+        var jsonComposer = new JsonComposer(100);
+        jsonComposer.OnFlush += (_, _) => flushed = true;
+
+        // Act - position(0) + size(99) < bufferSize(100)
+        jsonComposer.CheckBuffer(99);
+
+        // Assert
+        flushed.Should().BeFalse();
+    }
 }

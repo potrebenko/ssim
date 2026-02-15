@@ -4,10 +4,10 @@ using BenchmarkDotNet.Jobs;
 namespace SSIM.Parser.Benchmark;
 
 [MemoryDiagnoser]
-//[ShortRunJob]
-[SimpleJob(RuntimeMoniker.Net80)]
-[SimpleJob(RuntimeMoniker.Net90)]
-[SimpleJob(RuntimeMoniker.Net10_0)]
+[ShortRunJob]
+// [SimpleJob(RuntimeMoniker.Net80)]
+// [SimpleJob(RuntimeMoniker.Net90)]
+// [SimpleJob(RuntimeMoniker.Net10_0)]
 public class ParserBenchmark
 {
     private readonly string _filePath = "sample.ssim";

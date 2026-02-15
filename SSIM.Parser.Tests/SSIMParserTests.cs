@@ -214,12 +214,124 @@ public class SSIMParserTests
         json.Should().Contain("\"RecordType\":\"5\"");
     }
 
+    [Fact]
+    public void Parse_WithNoDataRecords_ShouldReturn2()
+    {
+        // Arrange
+        var composer = new JsonComposer(16384);
+        var reader = new FakeSSIMReader(HeaderData.ToBytes(), CarrierData.ToBytes());
+        var writer = new FakeFileWriter();
+        var parser = new SSIMParser(reader, writer, composer);
+
+        // Act
+        var result = parser.Parse();
+
+        // Assert
+        result.Should().Be(2);
+    }
+
+    [Fact]
+    public void Parse_WithAllRecordTypes_ShouldProduceValidJson()
+    {
+        // Arrange
+        var composer = new JsonComposer(16384);
+        var flightRecord = MakeBufferRecord(FlightLegData);
+        var segmentRecord = MakeBufferRecord(SegmentRecordData);
+        var trailerRecord = MakeBufferRecord(TrailerData);
+        var reader = new FakeSSIMReader(
+            HeaderData.ToBytes(),
+            CarrierData.ToBytes(),
+            flightRecord, segmentRecord, trailerRecord);
+        var writer = new FakeFileWriter();
+        var parser = new SSIMParser(reader, writer, composer);
+
+        // Act
+        parser.Parse();
+
+        // Assert
+        var json = composer.ToString();
+        json.Should().Contain("\"RecordType\":\"1\"");
+        json.Should().Contain("\"RecordType\":\"2\"");
+        json.Should().Contain("\"RecordType\":\"3\"");
+        json.Should().Contain("\"RecordType\":\"4\"");
+        json.Should().Contain("\"RecordType\":\"5\"");
+    }
+
+    [Fact]
+    public void Parse_WithMultipleReadIterations_ShouldParseAllRecords()
+    {
+        // Arrange - each record is returned in a separate ReadRecord call
+        var composer = new JsonComposer(16384);
+        var record1 = MakeBufferRecord(FlightLegData);
+        var record2 = MakeBufferRecord(FlightLegData);
+        var reader = new FakeSSIMReader(
+            HeaderData.ToBytes(),
+            CarrierData.ToBytes(),
+            record1, record2);
+        var writer = new FakeFileWriter();
+        var parser = new SSIMParser(reader, writer, composer);
+
+        // Act
+        parser.Parse();
+
+        // Assert
+        var json = composer.ToString();
+        // Should contain two flight leg objects (two commas followed by RecordType:3)
+        var count = 0;
+        var idx = 0;
+        while ((idx = json.IndexOf("\"RecordType\":\"3\"", idx, StringComparison.Ordinal)) != -1)
+        {
+            count++;
+            idx++;
+        }
+        count.Should().Be(2);
+    }
+
+    [Fact]
+    public void Parse_WithEmptyReader_ShouldStillProduceValidJsonWithHeaders()
+    {
+        // Arrange
+        var composer = new JsonComposer(16384);
+        var reader = new FakeSSIMReader(HeaderData.ToBytes(), CarrierData.ToBytes());
+        var writer = new FakeFileWriter();
+        var parser = new SSIMParser(reader, writer, composer);
+
+        // Act
+        parser.Parse();
+
+        // Assert
+        var json = composer.ToString();
+        json.Should().StartWith("[{");
+        json.Should().EndWith("}]");
+    }
+
+    [Fact]
+    public void Parse_ShouldCallDisposeBeforeFlush()
+    {
+        // Arrange - verifies ordering: reader.Dispose → composer.Flush → writer.Dispose
+        var composer = new JsonComposer(16384);
+        var reader = new FakeSSIMReader(HeaderData.ToBytes(), CarrierData.ToBytes());
+        var writer = new FakeFileWriter();
+        var callOrder = new List<string>();
+        reader.OnDispose = () => callOrder.Add("reader.Dispose");
+        composer.OnFlush += (_, _) => callOrder.Add("composer.Flush");
+        writer.OnDispose = () => callOrder.Add("writer.Dispose");
+        var parser = new SSIMParser(reader, writer, composer);
+
+        // Act
+        parser.Parse();
+
+        // Assert
+        callOrder.Should().ContainInOrder("reader.Dispose", "composer.Flush", "writer.Dispose");
+    }
+
     private class FakeSSIMReader : ISSIMReader
     {
         private readonly byte[][] _headers;
         private readonly Queue<byte[]> _reads;
 
         public bool DisposeCalled { get; private set; }
+        public Action? OnDispose { get; set; }
 
         public FakeSSIMReader(byte[] header, byte[] carrier, params byte[][] reads)
         {
@@ -242,12 +354,22 @@ public class SSIMParserTests
             readLength = data.Length;
         }
 
-        public void Dispose() => DisposeCalled = true;
+        public void Dispose()
+        {
+            DisposeCalled = true;
+            OnDispose?.Invoke();
+        }
     }
 
     private class FakeFileWriter : IFileWriter
     {
         public bool DisposeCalled { get; private set; }
-        public void Dispose() => DisposeCalled = true;
+        public Action? OnDispose { get; set; }
+
+        public void Dispose()
+        {
+            DisposeCalled = true;
+            OnDispose?.Invoke();
+        }
     }
 }
