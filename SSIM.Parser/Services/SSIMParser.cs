@@ -8,7 +8,7 @@ public class SSIMParser
     private readonly byte[] _buffer;
     private readonly int _maxBufferLength;
     private const int BufferSize = 20_100;
-    
+
     public SSIMParser(ISSIMReader fileReader, IFileWriter fileWriter, IDataComposer composer)
     {
         _fileWriter = fileWriter;
@@ -36,7 +36,7 @@ public class SSIMParser
             {
                 break;
             }
-            
+
             while (offset + Constants.RecordLength <= readLength)
             {
                 switch (_buffer[offset])
@@ -46,11 +46,12 @@ public class SSIMParser
                     case (byte)'5': _buffer.ParseTrailerRecord(offset, _composer); break;
                 }
                 offset += Constants.RecordLength;
+                parsedRecords++;
             }
         }
 
         _composer.AppendCloseBracket();
-        
+
         _fileReader.Dispose();
         _composer.Flush();
         _fileWriter.Dispose();
