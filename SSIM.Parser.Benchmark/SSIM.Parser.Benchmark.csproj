@@ -12,6 +12,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Content Include="sample.ssim">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\SSIM.Parser\SSIM.Parser.csproj" />
     </ItemGroup>
 
